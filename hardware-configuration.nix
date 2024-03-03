@@ -18,9 +18,15 @@
       fsType = "ext4";
     };
 
+  
   fileSystems."/boot" =
     { device = "/dev/disk/by-uuid/80DD-FF56";
       fsType = "vfat";
+    };
+  
+  fileSystems."/media/4tb" = 
+    { device = "/dev/disk/by-uuid/e4481f7f-2822-44a6-b611-9902f817705b";
+      fsType = "btrfs";
     };
 
   swapDevices =
