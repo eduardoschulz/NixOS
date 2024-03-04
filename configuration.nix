@@ -104,6 +104,7 @@
     wget
     iperf3
     git
+    pciutils
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -129,6 +130,10 @@
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
 };	
+  programs.neovim = {
+    enable = true;
+    defaultEditor = true;
+  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
