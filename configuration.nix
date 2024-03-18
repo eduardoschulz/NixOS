@@ -1,4 +1,4 @@
-# Edit this configuration file to define what should be installed on
+
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
@@ -10,12 +10,31 @@
       ./hardware-configuration.nix
     ];
 
+	nix = {
+		settings = {
+		warn-dirty = true;
+		experimental-features = "nix-command flakes";
+		auto-optimise-store = true;
+		};
+	};
+
+	nixpkgs = {
+		config = {
+			allowUnfree = true;
+			allowUnfreePredicate = pkg: builtins.elem (builtins.parseDrvName pkg.name).name ["steam" "steam-run" ];	
+		};	
+		overlays = [
+			(final: prev: {
+				dwm = prev.dwm.overrideAttrs (old: {src = /home/eduardo/.config/dwm;});
+				})
+			];
+	};
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "core"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+  boot.initrd.luks.devices."luks-701dbd51-f2f6-47a8-8813-187b050f2ab1".device = "/dev/disk/by-uuid/701dbd51-f2f6-47a8-8813-187b050f2ab1";
+  networking.hostName = "nixos"; # Define your hostname.
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -42,19 +61,18 @@
     LC_TIME = "pt_BR.UTF-8";
   };
 
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-  
-  services.xserver.videoDrivers = [ "amdgpu"];
-  # Enable the GNOME Desktop Environment.
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
-
-  # Configure keymap in X11
-  services.xserver = {
-    layout = "us";
-    xkbVariant = "";
+	services.xserver = {
+		enable = true;
+		displayManager.gdm.enable = true;
+		desktopManager.gnome.enable = true;
+		windowManager.dwm.enable = true;
+    layout = "br";
+    xkbVariant = "thinkpad";
   };
+
+
+  # Configure console keymap
+  console.keyMap = "br-abnt2";
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
@@ -83,28 +101,33 @@
   users.users.eduardo = {
     isNormalUser = true;
     description = "Eduardo";
-    extraGroups = [ "networkmanager" "wheel" "video" ];
-    packages = with pkgs; [
-      firefox
-      neovim
-      alacritty
-      neofetch
-      discord
-    #  thunderbird
-    ];
+    extraGroups = [
+		"networkmanager"
+		"wheel"
+		"qemu"
+		"kvm"
+		"libvirtd"
+		"sshd"
+		"audio"
+		"video"
+		];
   };
 
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
+
+	programs.steam = {
+		enable = true;
+		remotePlay.openFirewall = true;
+		dedicatedServer.openFirewall = true;
+	};
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    neovim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    wget
-    iperf3
-    git
-    pciutils
+
+		 vim
+     home-manager
+		 steam-run
+		 steam
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -114,7 +137,17 @@
   #   enable = true;
   #   enableSSHSupport = true;
   # };
+  programs.neovim = {
+    enable = true;
+    defaultEditor = true;
+  };
 
+	virtualisation.libvirtd.enable = true;
+	programs.virt-manager = {
+      enable = true;
+      };
+	
+#  nixpkgs.texlive.combined.scheme-medium;
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
@@ -125,15 +158,6 @@
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-};	
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
